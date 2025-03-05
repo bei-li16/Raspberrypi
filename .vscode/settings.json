@@ -55,6 +55,8 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "iomanip": "cpp",
-        "sstream": "cpp"
-    }
+        "sstream": "cpp",
+        "cstring": "cpp"
+    },
+    "makefile.makePath": "C:\\MinGW\\bin\\mingw32-make.exe"
 }
