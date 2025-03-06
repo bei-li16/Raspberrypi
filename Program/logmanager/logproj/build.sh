@@ -3,6 +3,7 @@
 
 g++ -std=c++11 -o log_server log_server.cpp 
 g++ -std=c++11 -o log_client log_client.cpp 
+g++ -std=c++11 -o log_period log_period.cpp 
 g++ log_uartprint.cpp  -lserial -o log_uartprint 
 sudo ./log_server
 

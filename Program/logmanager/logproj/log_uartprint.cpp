@@ -56,7 +56,7 @@ int main()
                 serial_port.ReadLine(data, '\n', 1000); // 超时 1000ms
                 if (!data.empty()) 
                 {
-                    std::cout << "接收数据: " << data << std::endl;
+                    // std::cout << "接收数据: " << data << std::endl;
                     try 
                     {
                         client.send_log("MCU", data);  // 内部可能抛出异常
