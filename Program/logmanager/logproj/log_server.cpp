@@ -57,12 +57,6 @@ public:
 ThreadSafeQueue<std::string> log_queue;
 std::atomic<bool> running{true};
 
-<<<<<<< HEAD
-// 日志写入线程
-void log_writer() 
-{
-    std::ofstream log_file(LOG_FILE, std::ios::app);
-=======
 // 获取文件大小
 off_t get_file_size(const std::string& path) 
 {
@@ -107,7 +101,6 @@ void log_writer() {
     std::ofstream log_file;
     log_file.open(LOG_FILE, std::ios::app);
 
->>>>>>> d32864e ([modify] uart 日志正常)
     if (!log_file.is_open()) 
     {
         std::cerr << "无法打开日志文件！" << std::endl;
@@ -119,10 +112,6 @@ void log_writer() {
         std::string log_entry;
         if (log_queue.pop(log_entry)) 
         {
-<<<<<<< HEAD
-            std::time_t now = std::time(nullptr);
-            log_file << log_entry << std::endl;
-=======
             // 写入日志
             log_file << log_entry;
             log_file.flush();
@@ -139,14 +128,11 @@ void log_writer() {
                     return;
                 }
             }
->>>>>>> d32864e ([modify] uart 日志正常)
         }
     }
     log_file.close();
 }
 
-<<<<<<< HEAD
-=======
 // // 日志写入线程
 // void log_writer() 
 // {
@@ -171,7 +157,6 @@ void log_writer() {
 //     log_file.close();
 // }
 
->>>>>>> d32864e ([modify] uart 日志正常)
 // 在服务端的 handle_client 函数中添加日志
 void handle_client(int client_fd) 
 {
@@ -180,11 +165,7 @@ void handle_client(int client_fd)
     if (bytes_read > 0) 
     {
         std::string message(buffer, bytes_read);
-<<<<<<< HEAD
-        std::cout << "接收到日志: " << message << std::endl;  // 调试输出
-=======
         // std::cout << "接收到日志: " << message << std::endl;  // 调试输出
->>>>>>> d32864e ([modify] uart 日志正常)
         log_queue.push(message);
     } 
     else 
