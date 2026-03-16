@@ -378,6 +378,92 @@ header h1 {
     text-align: right;
 }
 
+/* File Send Panel */
+.file-send-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.file-send-options .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.file-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.file-group input[type="file"] {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+.file-group input[type="file"]:hover {
+    border-color: var(--accent-primary);
+}
+
+.file-name {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.form-group input[type="number"] {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    width: 100px;
+}
+
+.form-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--success);
+    box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.2);
+}
+
+.file-send-progress {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--accent-primary));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+#file-status {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+
 /* Footer */
 footer {
     text-align: center;

@@ -126,6 +126,51 @@
                     <span id="tx-count">TX: 0 bytes</span>
                 </div>
             </div>
+
+            <!-- File Send Panel -->
+            <div class="panel file-send-panel">
+                <h2>Send from File</h2>
+                <div class="file-send-options">
+                    <div class="form-row">
+                        <div class="form-group file-group">
+                            <label for="file-input">Data File</label>
+                            <input type="file" id="file-input" accept=".txt,.bin,.hex,.csv">
+                            <span id="file-name" class="file-name">No file selected</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-format">Format</label>
+                            <select id="file-format">
+                                <option value="ascii" selected>ASCII</option>
+                                <option value="hex">Hex</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="send-interval">Interval (ms)</label>
+                            <input type="number" id="send-interval" value="100" min="1" max="1000" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="send-mode">Mode</label>
+                            <select id="send-mode">
+                                <option value="oneshot" selected>OneShot</option>
+                                <option value="continuous">Continuous</option>
+                                <option value="pingpong">PingPong</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-send-progress">
+                    <div class="progress-bar">
+                        <div id="file-progress" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span id="file-status">Ready</span>
+                </div>
+                <div class="button-group">
+                    <button id="file-send-start" class="btn btn-primary" disabled>Start</button>
+                    <button id="file-send-stop" class="btn btn-secondary" disabled>Stop</button>
+                </div>
+            </div>
         </div>
 
         <footer>

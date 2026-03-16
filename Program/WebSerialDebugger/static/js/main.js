@@ -370,3 +370,236 @@ window.addEventListener('beforeunload', () => {
         disconnect();
     }
 });
+
+// ==================== File Send Functionality ====================
+
+// File send state
+let fileSendState = {
+    isSending: false,
+    fileData: [],
+    currentIndex: 0,
+    direction: 1,  // 1 for forward, -1 for backward (pingpong mode)
+    sendInterval: null
+};
+
+// File send DOM elements
+const fileElements = {
+    fileInput: document.getElementById('file-input'),
+    fileName: document.getElementById('file-name'),
+    fileFormat: document.getElementById('file-format'),
+    sendInterval: document.getElementById('send-interval'),
+    sendMode: document.getElementById('send-mode'),
+    fileProgress: document.getElementById('file-progress'),
+    fileStatus: document.getElementById('file-status'),
+    fileSendStart: document.getElementById('file-send-start'),
+    fileSendStop: document.getElementById('file-send-stop')
+};
+
+// Setup file send event listeners
+if (fileElements.fileInput) {
+    fileElements.fileInput.addEventListener('change', handleFileSelect);
+    fileElements.fileSendStart.addEventListener('click', startFileSend);
+    fileElements.fileSendStop.addEventListener('click', stopFileSend);
+}
+
+// Handle file selection
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        fileElements.fileName.textContent = file.name;
+        fileElements.fileStatus.textContent = 'File loaded';
+        fileElements.fileSendStart.disabled = !isConnected;
+    } else {
+        fileElements.fileName.textContent = 'No file selected';
+        fileElements.fileStatus.textContent = 'Ready';
+        fileElements.fileSendStart.disabled = true;
+    }
+}
+
+// Parse file content based on format
+function parseFileContent(content, format) {
+    const bytes = [];
+
+    if (format === 'hex') {
+        // Hex format: parse hex values like "0x01 0x02" or "01 02"
+        // First try 0x prefix style
+        let hexValues = content.match(/0x([0-9a-fA-F]{1,2})/g);
+        if (hexValues && hexValues.length > 0) {
+            hexValues.forEach(hex => {
+                bytes.push(parseInt(hex.substring(2), 16));
+            });
+        } else {
+            // Try compact format "01 02 FF"
+            hexValues = content.match(/\b[0-9a-fA-F]{2}\b/g);
+            if (hexValues) {
+                hexValues.forEach(hex => {
+                    bytes.push(parseInt(hex, 16));
+                });
+            }
+        }
+    } else {
+        // ASCII format: skip commas and semicolons as delimiters
+        for (let i = 0; i < content.length; i++) {
+            const char = content[i];
+            if (char !== ',' && char !== ';') {
+                bytes.push(char.charCodeAt(0));
+            }
+        }
+    }
+
+    return bytes;
+}
+
+// Start file sending
+async function startFileSend() {
+    if (!isConnected || fileSendState.isSending) return;
+    
+    const file = fileElements.fileInput.files[0];
+    if (!file) {
+        alert('Please select a file first');
+        return;
+    }
+    
+    try {
+        const content = await file.text();
+        const format = fileElements.fileFormat.value;
+        const bytes = parseFileContent(content, format);
+        
+        if (bytes.length === 0) {
+            alert('No valid data found in file');
+            return;
+        }
+        
+        // Initialize send state
+        fileSendState = {
+            isSending: true,
+            fileData: bytes,
+            currentIndex: 0,
+            direction: 1,
+            sendInterval: null
+        };
+        
+        // Update UI
+        fileElements.fileSendStart.disabled = true;
+        fileElements.fileSendStop.disabled = false;
+        fileElements.fileStatus.textContent = 'Sending...';
+        
+        // Start sending
+        const intervalMs = parseInt(fileElements.sendInterval.value) || 100;
+        sendNextByte();
+        fileSendState.sendInterval = setInterval(sendNextByte, intervalMs);
+        
+        logToTerminal('system', `Started file send: ${bytes.length} bytes, mode: ${fileElements.sendMode.value}`);
+        
+    } catch (error) {
+        logToTerminal('system', `File read error: ${error.message}`);
+        alert(`Error reading file: ${error.message}`);
+    }
+}
+
+// Send next byte based on mode
+async function sendNextByte() {
+    if (!fileSendState.isSending || !isConnected) {
+        stopFileSend();
+        return;
+    }
+    
+    const mode = fileElements.sendMode.value;
+    const bytes = fileSendState.fileData;
+    const totalBytes = bytes.length;
+    
+    // Get current byte
+    const byteIndex = fileSendState.currentIndex;
+    const byteValue = bytes[byteIndex];
+    
+    // Send the byte
+    try {
+        await sendByte(byteValue);
+        
+        // Update progress
+        const progress = ((byteIndex + 1) / totalBytes) * 100;
+        fileElements.fileProgress.style.width = `${progress}%`;
+        fileElements.fileStatus.textContent = `${byteIndex + 1}/${totalBytes}`;
+        
+        // Update index based on mode
+        if (mode === 'oneshot') {
+            fileSendState.currentIndex++;
+            if (fileSendState.currentIndex >= totalBytes) {
+                stopFileSend();
+                fileElements.fileStatus.textContent = 'Completed';
+                logToTerminal('system', 'File send completed (oneshot)');
+            }
+        } else if (mode === 'continuous') {
+            fileSendState.currentIndex = (fileSendState.currentIndex + 1) % totalBytes;
+        } else if (mode === 'pingpong') {
+            fileSendState.currentIndex += fileSendState.direction;
+            if (fileSendState.currentIndex >= totalBytes - 1) {
+                fileSendState.direction = -1;
+            } else if (fileSendState.currentIndex <= 0) {
+                fileSendState.direction = 1;
+            }
+        }
+    } catch (error) {
+        logToTerminal('system', `Send error: ${error.message}`);
+        stopFileSend();
+    }
+}
+
+// Send single byte
+async function sendByte(byteValue) {
+    const hexString = byteValue.toString(16).padStart(2, '0');
+    
+    const response = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            text: hexString,
+            hex: true,
+            newline: false
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+        const timestamp = elements.showTimestamp.checked ? 
+            new Date().toLocaleTimeString() : '';
+        logToTerminal('tx', `0x${hexString.toUpperCase()}`, timestamp);
+        
+        txBytes += 1;
+        elements.txCount.textContent = `TX: ${txBytes} bytes`;
+    } else {
+        throw new Error(data.error);
+    }
+}
+
+// Stop file sending
+function stopFileSend() {
+    fileSendState.isSending = false;
+    
+    if (fileSendState.sendInterval) {
+        clearInterval(fileSendState.sendInterval);
+        fileSendState.sendInterval = null;
+    }
+    
+    fileElements.fileSendStart.disabled = false;
+    fileElements.fileSendStop.disabled = true;
+    
+    if (fileElements.fileStatus.textContent !== 'Completed') {
+        fileElements.fileStatus.textContent = 'Stopped';
+    }
+    
+    logToTerminal('system', 'File send stopped');
+}
+
+// Update file send button state when connection changes
+const originalUpdateConnectionStatus = updateConnectionStatus;
+updateConnectionStatus = function(connected, port = '') {
+    originalUpdateConnectionStatus(connected, port);
+    
+    // Update file send button
+    if (fileElements.fileSendStart) {
+        const hasFile = fileElements.fileInput.files.length > 0;
+        fileElements.fileSendStart.disabled = !(connected && hasFile && !fileSendState.isSending);
+    }
+};
