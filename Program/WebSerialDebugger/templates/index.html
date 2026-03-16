@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Serial Debugger</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔌 Web Serial Debugger</h1>
+            <p class="subtitle">Cross-platform Serial Port Debugging Tool</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Connection Panel -->
+            <div class="panel connection-panel">
+                <h2>Connection</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="port">Port</label>
+                        <select id="port">
+                            <option value="">Select Port...</option>
+                        </select>
+                        <button id="refresh-ports" class="btn-icon" title="Refresh Ports">🔄</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="baudrate">Baud Rate</label>
+                        <select id="baudrate">
+                            <option value="9600">9600</option>
+                            <option value="19200">19200</option>
+                            <option value="38400">38400</option>
+                            <option value="57600">57600</option>
+                            <option value="115200" selected>115200</option>
+                            <option value="230400">230400</option>
+                            <option value="460800">460800</option>
+                            <option value="921600">921600</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="databits">Data Bits</label>
+                        <select id="databits">
+                            <option value="7">7</option>
+                            <option value="8" selected>8</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="parity">Parity</label>
+                        <select id="parity">
+                            <option value="N" selected>None</option>
+                            <option value="E">Even</option>
+                            <option value="O">Odd</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stopbits">Stop Bits</label>
+                        <select id="stopbits">
+                            <option value="1" selected>1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="connection-status">
+                    <span id="status-indicator" class="status-dot disconnected"></span>
+                    <span id="status-text">Disconnected</span>
+                </div>
+                <div class="button-group">
+                    <button id="connect-btn" class="btn btn-primary">Connect</button>
+                    <button id="disconnect-btn" class="btn btn-secondary" disabled>Disconnect</button>
+                </div>
+            </div>
+
+            <!-- Terminal Panel -->
+            <div class="panel terminal-panel">
+                <div class="panel-header">
+                    <h2>Terminal</h2>
+                    <div class="terminal-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="show-timestamp" checked>
+                            <span>Timestamp</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="hex-mode">
+                            <span>Hex Mode</span>
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="autoscroll" checked>
+                            <span>Autoscroll</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="terminal" class="terminal"></div>
+                <div class="terminal-actions">
+                    <button id="clear-btn" class="btn btn-small">Clear</button>
+                    <button id="save-btn" class="btn btn-small">Save to File</button>
+                    <span id="rx-count">RX: 0 bytes</span>
+                </div>
+            </div>
+
+            <!-- Send Panel -->
+            <div class="panel send-panel">
+                <h2>Send Data</h2>
+                <div class="send-options">
+                    <label class="checkbox">
+                        <input type="checkbox" id="send-hex">
+                        <span>Hex Mode</span>
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" id="send-newline" checked>
+                        <span>Add Newline (\n)</span>
+                    </label>
+                </div>
+                <div class="send-row">
+                    <input type="text" id="send-input" placeholder="Enter data to send..." maxlength="1000">
+                    <button id="send-btn" class="btn btn-primary" disabled>Send</button>
+                </div>
+                <div class="quick-commands">
+                    <span>Quick:</span>
+                    <button class="btn-quick" data-cmd="AT">AT</button>
+                    <button class="btn-quick" data-cmd="AT+RST">AT+RST</button>
+                    <button class="btn-quick" data-cmd="AT+GMR">AT+GMR</button>
+                    <button class="btn-quick" data-cmd="help">help</button>
+                </div>
+                <div class="send-history">
+                    <span id="tx-count">TX: 0 bytes</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Web Serial Debugger | Cross-platform Serial Tool | <a href="#" id="about-link">About</a></p>
+        </footer>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>About Web Serial Debugger</h2>
+            <p>A clean and modern web-based serial port debugging tool.</p>
+            <h3>Features:</h3>
+            <ul>
+                <li>Real-time serial data monitoring</li>
+                <li>Support for multiple baud rates</li>
+                <li>Hex and ASCII display modes</li>
+                <li>Data logging to file</li>
+                <li>Quick command buttons</li>
+            </ul>
+            <h3>Browser Support:</h3>
+            <p>Requires Chrome/Edge 89+ with Web Serial API support</p>
+            <p class="version">Version 1.0.0</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
