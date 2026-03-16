@@ -4,7 +4,8 @@ Test script for file send functionality
 """
 
 import sys
-sys.path.insert(0, '/home/bei-li16/Project/Raspberrypi/Program/WebSerialDebugger')
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Test parseFileContent logic
 def test_parse_ascii():

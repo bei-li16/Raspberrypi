@@ -19,22 +19,33 @@ A cross-platform web-based serial port debugger with a clean and modern interfac
 - Python 3.7+
 - Modern browser with Web Serial API support (Chrome/Edge 89+)
 
-## Installation
+## Quick Start
 
+### Option 1: Using Quick Start Script (Recommended)
+
+**Linux/macOS:**
 ```bash
-# Clone or download the project
 cd WebSerialDebugger
-
-# Install dependencies
-pip install -r requirements.txt
+./quickstart.sh        # Default port 5000
+./quickstart.sh 8080   # Custom port
 ```
 
-## Usage
+**Windows:**
+```cmd
+cd WebSerialDebugger
+quickstart.bat         # Default port 5000
+quickstart.bat 8080    # Custom port
+```
 
-### Start the Server
+### Option 2: Manual Start
 
 ```bash
-python app.py
+# Install dependencies
+pip install -r requirements.txt
+
+# Start server
+python app.py              # Default port 5000
+python app.py --port 8080  # Custom port
 ```
 
 Then open your browser and navigate to: `http://localhost:5000`
@@ -106,8 +117,11 @@ WebSerialDebugger/
 ├── requirements.txt         # Python dependencies
 ├── README.md               # This file
 ├── todolist.md             # Feature roadmap
-├── test_frame_buffer.py    # Frame buffering tests
-├── test_file_send.py       # File send functionality tests
+├── quickstart.sh           # Quick start script (Linux/macOS)
+├── quickstart.bat          # Quick start script (Windows)
+├── tests/                  # Test suite
+│   ├── test_frame_buffer.py    # Frame buffering tests
+│   └── test_file_send.py       # File send functionality tests
 ├── static/                 # Static assets
 │   ├── css/
 │   │   └── style.css       # Stylesheet
@@ -122,6 +136,8 @@ WebSerialDebugger/
 Run the test suites to verify functionality:
 
 ```bash
+cd tests
+
 # Test frame buffering logic
 python test_frame_buffer.py
 

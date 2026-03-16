@@ -237,6 +237,17 @@ def get_status():
 
 
 if __name__ == '__main__':
-    print("Starting Web Serial Debugger...")
-    print("Open your browser and navigate to: http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Web Serial Debugger')
+    parser.add_argument('--port', type=int, default=5000, help='Server port (default: 5000)')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='Server host (default: 0.0.0.0)')
+    args = parser.parse_args()
+
+    print("=" * 50)
+    print("  Web Serial Debugger")
+    print("=" * 50)
+    print(f"Starting server on http://{args.host}:{args.port}")
+    print("Press Ctrl+C to stop")
+    print("=" * 50)
+    app.run(host=args.host, port=args.port, debug=False)
