@@ -21,6 +21,10 @@ serial_thread = None
 is_reading = False
 received_data_buffer = []
 
+# Frame buffering - delimiter based
+frame_buffer = bytearray()
+FRAME_DELIMITER = b'\n'  # LF as frame delimiter
+
 
 def get_serial_ports():
     """Get list of available serial ports"""
@@ -35,23 +39,36 @@ def get_serial_ports():
 
 
 def read_serial_data():
-    """Background thread to read serial data"""
-    global serial_conn, is_reading, received_data_buffer
+    """Background thread to read serial data with delimiter-based frame buffering"""
+    global serial_conn, is_reading, received_data_buffer, frame_buffer
     
     while is_reading and serial_conn and serial_conn.is_open:
         try:
+            # Read any available data into frame buffer
             if serial_conn.in_waiting > 0:
                 data = serial_conn.read(serial_conn.in_waiting)
+                frame_buffer.extend(data)
+            
+            # Process complete frames (split by delimiter)
+            while FRAME_DELIMITER in frame_buffer:
+                # Split at first delimiter
+                frame_end = frame_buffer.index(FRAME_DELIMITER)
+                frame_data = frame_buffer[:frame_end]  # Exclude delimiter
+                
                 timestamp = time.strftime('%H:%M:%S')
                 received_data_buffer.append({
                     'timestamp': timestamp,
-                    'data': data.hex(),
-                    'ascii': data.decode('utf-8', errors='replace')
+                    'data': frame_data.hex(),
+                    'ascii': frame_data.decode('utf-8', errors='replace')
                 })
+                
+                # Keep remaining data (after delimiter)
+                frame_buffer = frame_buffer[frame_end + 1:]
+                
         except Exception as e:
             print(f"Error reading serial: {e}")
             break
-        time.sleep(0.01)
+        time.sleep(0.005)  # 5ms poll interval for lower latency
 
 
 @app.route('/')
@@ -118,10 +135,20 @@ def connect_port():
 @app.route('/api/disconnect', methods=['POST'])
 def disconnect_port():
     """API: Disconnect from serial port"""
-    global serial_conn, is_reading
+    global serial_conn, is_reading, frame_buffer
     
     try:
         is_reading = False
+        # Flush any remaining incomplete frame data
+        if len(frame_buffer) > 0:
+            timestamp = time.strftime('%H:%M:%S')
+            received_data_buffer.append({
+                'timestamp': timestamp,
+                'data': frame_buffer.hex(),
+                'ascii': frame_buffer.decode('utf-8', errors='replace') + ' [incomplete]'
+            })
+            frame_buffer = bytearray()
+        
         if serial_conn and serial_conn.is_open:
             serial_conn.close()
             serial_conn = None
