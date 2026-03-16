@@ -5,7 +5,6 @@ Simulates serial data arrival patterns
 """
 
 import time
-from datetime import datetime
 
 # Test configuration
 FRAME_DELIMITER = b'\n'
@@ -27,20 +26,20 @@ class FrameBuffer:
         while FRAME_DELIMITER in self.frame_buffer:
             frame_end = self.frame_buffer.index(FRAME_DELIMITER)
             frame_data = self.frame_buffer[:frame_end]
-            
-            timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+
+            timestamp = time.strftime('%H:%M:%S') + f'.{int(time.time() * 1000) % 1000:03d}'
             self.received_frames.append({
                 'timestamp': timestamp,
                 'data': frame_data.hex(),
                 'ascii': frame_data.decode('utf-8', errors='replace')
             })
-            
+
             self.frame_buffer = self.frame_buffer[frame_end + 1:]
     
     def flush_incomplete(self):
         """Flush any remaining incomplete frame"""
         if len(self.frame_buffer) > 0:
-            timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+            timestamp = time.strftime('%H:%M:%S') + f'.{int(time.time() * 1000) % 1000:03d}'
             self.received_frames.append({
                 'timestamp': timestamp,
                 'data': self.frame_buffer.hex(),

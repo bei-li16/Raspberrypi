@@ -55,7 +55,7 @@ def read_serial_data():
                 frame_end = frame_buffer.index(FRAME_DELIMITER)
                 frame_data = frame_buffer[:frame_end]  # Exclude delimiter
                 
-                timestamp = time.strftime('%H:%M:%S')
+                timestamp = time.strftime('%H:%M:%S') + f'.{int(time.time() * 1000) % 1000:03d}'
                 received_data_buffer.append({
                     'timestamp': timestamp,
                     'data': frame_data.hex(),
@@ -141,7 +141,7 @@ def disconnect_port():
         is_reading = False
         # Flush any remaining incomplete frame data
         if len(frame_buffer) > 0:
-            timestamp = time.strftime('%H:%M:%S')
+            timestamp = time.strftime('%H:%M:%S') + f'.{int(time.time() * 1000) % 1000:03d}'
             received_data_buffer.append({
                 'timestamp': timestamp,
                 'data': frame_buffer.hex(),
