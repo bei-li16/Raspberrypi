@@ -25,7 +25,11 @@ echo ""
 echo "📦 Checking dependencies..."
 if ! python3 -c "import flask, serial" 2>/dev/null; then
     echo "Installing required packages..."
-    pip3 install -r requirements.txt
+    python3 -m pip install -r requirements.txt
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to install dependencies"
+        exit 1
+    fi
 else
     echo "✅ Dependencies already installed"
 fi

@@ -11,23 +11,27 @@ setlocal enabledelayedexpansion
 REM Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo ❌ Error: Python is not installed or not in PATH
+    echo [ERROR] Python is not installed or not in PATH
     exit /b 1
 )
 
 for /f "tokens=2" %%a in ('python --version 2^>^&1') do (
-    echo ✅ Python version: %%a
+    echo [OK] Python version: %%a
 )
 
 REM Check/Install dependencies
 echo.
-echo 📦 Checking dependencies...
+echo Checking dependencies...
 python -c "import flask, serial" >nul 2>&1
 if errorlevel 1 (
     echo Installing required packages...
-    pip install -r requirements.txt
+    python -m pip install -r requirements.txt
+    if errorlevel 1 (
+        echo [ERROR] Failed to install dependencies
+        exit /b 1
+    )
 ) else (
-    echo ✅ Dependencies already installed
+    echo [OK] Dependencies already installed
 )
 
 REM Get port from argument or default
@@ -38,7 +42,7 @@ if "%~1"=="" (
 )
 
 echo.
-echo 🚀 Starting Web Serial Debugger...
+echo Starting Web Serial Debugger...
 echo    URL: http://localhost:%PORT%
 echo.
 echo Press Ctrl+C to stop
