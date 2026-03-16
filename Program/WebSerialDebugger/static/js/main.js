@@ -376,6 +376,7 @@ window.addEventListener('beforeunload', () => {
 // File send state
 let fileSendState = {
     isSending: false,
+    isPaused: false,
     fileData: [],
     currentIndex: 0,
     direction: 1,  // 1 for forward, -1 for backward (pingpong mode)
@@ -392,6 +393,8 @@ const fileElements = {
     fileProgress: document.getElementById('file-progress'),
     fileStatus: document.getElementById('file-status'),
     fileSendStart: document.getElementById('file-send-start'),
+    fileSendPause: document.getElementById('file-send-pause'),
+    fileSendContinue: document.getElementById('file-send-continue'),
     fileSendStop: document.getElementById('file-send-stop')
 };
 
@@ -399,6 +402,8 @@ const fileElements = {
 if (fileElements.fileInput) {
     fileElements.fileInput.addEventListener('change', handleFileSelect);
     fileElements.fileSendStart.addEventListener('click', startFileSend);
+    fileElements.fileSendPause.addEventListener('click', pauseFileSend);
+    fileElements.fileSendContinue.addEventListener('click', continueFileSend);
     fileElements.fileSendStop.addEventListener('click', stopFileSend);
 }
 
@@ -470,19 +475,23 @@ async function startFileSend() {
             return;
         }
         
-        // Initialize send state
+        // Initialize send state (preserve index if continuing, otherwise reset)
+        const isContinuing = fileSendState.isPaused;
         fileSendState = {
             isSending: true,
+            isPaused: false,
             fileData: bytes,
-            currentIndex: 0,
-            direction: 1,
+            currentIndex: isContinuing ? fileSendState.currentIndex : 0,
+            direction: isContinuing ? fileSendState.direction : 1,
             sendInterval: null
         };
         
         // Update UI
         fileElements.fileSendStart.disabled = true;
+        fileElements.fileSendPause.disabled = false;
+        fileElements.fileSendContinue.disabled = true;
         fileElements.fileSendStop.disabled = false;
-        fileElements.fileStatus.textContent = 'Sending...';
+        fileElements.fileStatus.textContent = isContinuing ? 'Continuing...' : 'Sending...';
         
         // Start sending
         const intervalMs = parseInt(fileElements.sendInterval.value) || 100;
@@ -573,33 +582,77 @@ async function sendByte(byteValue) {
     }
 }
 
-// Stop file sending
-function stopFileSend() {
+// Pause file sending
+function pauseFileSend() {
+    if (!fileSendState.isSending || fileSendState.isPaused) return;
+
+    fileSendState.isPaused = true;
     fileSendState.isSending = false;
-    
+
     if (fileSendState.sendInterval) {
         clearInterval(fileSendState.sendInterval);
         fileSendState.sendInterval = null;
     }
-    
+
+    fileElements.fileSendPause.disabled = true;
+    fileElements.fileSendContinue.disabled = false;
+    fileElements.fileStatus.textContent = `Paused at ${fileSendState.currentIndex + 1}/${fileSendState.fileData.length}`;
+
+    logToTerminal('system', `File send paused at byte ${fileSendState.currentIndex + 1}`);
+}
+
+// Continue file sending
+function continueFileSend() {
+    if (!fileSendState.isPaused || !isConnected) return;
+
+    fileSendState.isPaused = false;
+    fileSendState.isSending = true;
+
+    // Update UI
+    fileElements.fileSendPause.disabled = false;
+    fileElements.fileSendContinue.disabled = true;
+    fileElements.fileStatus.textContent = 'Continuing...';
+
+    // Start sending from current position
+    const intervalMs = parseInt(fileElements.sendInterval.value) || 100;
+    sendNextByte();
+    fileSendState.sendInterval = setInterval(sendNextByte, intervalMs);
+
+    logToTerminal('system', `File send continuing from byte ${fileSendState.currentIndex + 1}`);
+}
+
+// Stop file sending (reset)
+function stopFileSend() {
+    fileSendState.isSending = false;
+    fileSendState.isPaused = false;
+
+    if (fileSendState.sendInterval) {
+        clearInterval(fileSendState.sendInterval);
+        fileSendState.sendInterval = null;
+    }
+
     fileElements.fileSendStart.disabled = false;
+    fileElements.fileSendPause.disabled = true;
+    fileElements.fileSendContinue.disabled = true;
     fileElements.fileSendStop.disabled = true;
-    
+
     if (fileElements.fileStatus.textContent !== 'Completed') {
         fileElements.fileStatus.textContent = 'Stopped';
     }
-    
-    logToTerminal('system', 'File send stopped');
+
+    logToTerminal('system', 'File send stopped (reset)');
 }
 
 // Update file send button state when connection changes
 const originalUpdateConnectionStatus = updateConnectionStatus;
 updateConnectionStatus = function(connected, port = '') {
     originalUpdateConnectionStatus(connected, port);
-    
-    // Update file send button
+
+    // Update file send buttons
     if (fileElements.fileSendStart) {
         const hasFile = fileElements.fileInput.files.length > 0;
-        fileElements.fileSendStart.disabled = !(connected && hasFile && !fileSendState.isSending);
+        const isIdle = !fileSendState.isSending && !fileSendState.isPaused;
+        fileElements.fileSendStart.disabled = !(connected && hasFile && isIdle);
+        fileElements.fileSendContinue.disabled = !(connected && hasFile && fileSendState.isPaused);
     }
 };
